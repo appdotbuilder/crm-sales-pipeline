@@ -1,7 +1,22 @@
+import { db } from '../db';
+import { companiesTable } from '../db/schema';
 import { type Company } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function getCompany(id: number): Promise<Company | null> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching a single company by ID from the database.
-    return Promise.resolve(null);
-}
+export const getCompany = async (id: number): Promise<Company | null> => {
+  try {
+    const result = await db.select()
+      .from(companiesTable)
+      .where(eq(companiesTable.id, id))
+      .execute();
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('Company retrieval failed:', error);
+    throw error;
+  }
+};

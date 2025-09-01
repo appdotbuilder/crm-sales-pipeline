@@ -1,17 +1,52 @@
+import { db } from '../db';
+import { companiesTable } from '../db/schema';
 import { type UpdateCompanyInput, type Company } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function updateCompany(input: UpdateCompanyInput): Promise<Company> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is updating an existing company in the database.
-    return Promise.resolve({
-        id: input.id,
-        name: input.name || 'Default Name',
-        industry: input.industry !== undefined ? input.industry : null,
-        website: input.website !== undefined ? input.website : null,
-        phone: input.phone !== undefined ? input.phone : null,
-        email: input.email !== undefined ? input.email : null,
-        address: input.address !== undefined ? input.address : null,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Company);
-}
+export const updateCompany = async (input: UpdateCompanyInput): Promise<Company> => {
+  try {
+    // Extract id and update fields
+    const { id, ...updateFields } = input;
+
+    // Build update object with only provided fields
+    const updateData: Partial<typeof companiesTable.$inferInsert> = {
+      updated_at: new Date()
+    };
+
+    // Add only the fields that were provided in the input
+    if (input.name !== undefined) {
+      updateData.name = input.name;
+    }
+    if (input.industry !== undefined) {
+      updateData.industry = input.industry;
+    }
+    if (input.website !== undefined) {
+      updateData.website = input.website;
+    }
+    if (input.phone !== undefined) {
+      updateData.phone = input.phone;
+    }
+    if (input.email !== undefined) {
+      updateData.email = input.email;
+    }
+    if (input.address !== undefined) {
+      updateData.address = input.address;
+    }
+
+    // Update company record
+    const result = await db.update(companiesTable)
+      .set(updateData)
+      .where(eq(companiesTable.id, id))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      throw new Error(`Company with id ${id} not found`);
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('Company update failed:', error);
+    throw error;
+  }
+};

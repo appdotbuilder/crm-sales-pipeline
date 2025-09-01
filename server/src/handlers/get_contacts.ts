@@ -1,7 +1,16 @@
+import { db } from '../db';
+import { contactsTable } from '../db/schema';
 import { type Contact } from '../schema';
 
-export async function getContacts(): Promise<Contact[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all contacts from the database.
-    return Promise.resolve([]);
-}
+export const getContacts = async (): Promise<Contact[]> => {
+  try {
+    const results = await db.select()
+      .from(contactsTable)
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Failed to fetch contacts:', error);
+    throw error;
+  }
+};

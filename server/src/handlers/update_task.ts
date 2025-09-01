@@ -1,18 +1,52 @@
+import { db } from '../db';
+import { tasksTable } from '../db/schema';
 import { type UpdateTaskInput, type Task } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function updateTask(input: UpdateTaskInput): Promise<Task> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is updating an existing task in the database.
-    return Promise.resolve({
-        id: input.id,
-        title: input.title || 'Default Task',
-        description: input.description !== undefined ? input.description : null,
-        completed: input.completed !== undefined ? input.completed : false,
-        due_date: input.due_date !== undefined ? input.due_date : null,
-        contact_id: input.contact_id !== undefined ? input.contact_id : null,
-        company_id: input.company_id !== undefined ? input.company_id : null,
-        deal_id: input.deal_id !== undefined ? input.deal_id : null,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Task);
-}
+export const updateTask = async (input: UpdateTaskInput): Promise<Task> => {
+  try {
+    // Build update object with only provided fields
+    const updateData: any = {};
+    
+    if (input.title !== undefined) {
+      updateData.title = input.title;
+    }
+    if (input.description !== undefined) {
+      updateData.description = input.description;
+    }
+    if (input.completed !== undefined) {
+      updateData.completed = input.completed;
+    }
+    if (input.due_date !== undefined) {
+      updateData.due_date = input.due_date;
+    }
+    if (input.contact_id !== undefined) {
+      updateData.contact_id = input.contact_id;
+    }
+    if (input.company_id !== undefined) {
+      updateData.company_id = input.company_id;
+    }
+    if (input.deal_id !== undefined) {
+      updateData.deal_id = input.deal_id;
+    }
+
+    // Always update the updated_at timestamp
+    updateData.updated_at = new Date();
+
+    // Update the task record
+    const result = await db.update(tasksTable)
+      .set(updateData)
+      .where(eq(tasksTable.id, input.id))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      throw new Error(`Task with id ${input.id} not found`);
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('Task update failed:', error);
+    throw error;
+  }
+};

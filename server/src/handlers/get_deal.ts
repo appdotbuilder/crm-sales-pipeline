@@ -1,7 +1,27 @@
+import { db } from '../db';
+import { dealsTable } from '../db/schema';
 import { type Deal } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function getDeal(id: number): Promise<Deal | null> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching a single deal by ID from the database.
-    return Promise.resolve(null);
-}
+export const getDeal = async (id: number): Promise<Deal | null> => {
+  try {
+    const results = await db.select()
+      .from(dealsTable)
+      .where(eq(dealsTable.id, id))
+      .limit(1)
+      .execute();
+
+    if (results.length === 0) {
+      return null;
+    }
+
+    const deal = results[0];
+    return {
+      ...deal,
+      value: parseFloat(deal.value) // Convert numeric field back to number
+    };
+  } catch (error) {
+    console.error('Deal retrieval failed:', error);
+    throw error;
+  }
+};

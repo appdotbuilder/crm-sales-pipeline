@@ -1,7 +1,21 @@
+import { db } from '../db';
+import { dealsTable } from '../db/schema';
 import { type Deal } from '../schema';
 
-export async function getDeals(): Promise<Deal[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all deals from the database.
-    return Promise.resolve([]);
-}
+export const getDeals = async (): Promise<Deal[]> => {
+  try {
+    // Fetch all deals from the database
+    const results = await db.select()
+      .from(dealsTable)
+      .execute();
+
+    // Convert numeric fields back to numbers before returning
+    return results.map(deal => ({
+      ...deal,
+      value: parseFloat(deal.value) // Convert string back to number
+    }));
+  } catch (error) {
+    console.error('Failed to fetch deals:', error);
+    throw error;
+  }
+};
